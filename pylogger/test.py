@@ -1,11 +1,11 @@
 import logger
 from time import sleep
 
-@logger.console_action("Wating")
-def myfunction(i):
-    if i == 0:
-       return
-    myfunction(i -1)
+@logger.console_action("Printing OK")
+def wait_and_print_ok():
+    sleep(4)
+    logger.success("OK")
+    print('Normal log')
  
 class R():
 
@@ -13,5 +13,5 @@ class R():
     def g(self):
         sleep(1)
 
-myfunction(100)
+wait_and_print_ok()
 
