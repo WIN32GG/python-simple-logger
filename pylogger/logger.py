@@ -9,6 +9,7 @@ from threading import Thread
 import itertools
 from time import sleep
 from time import time
+import atexit
 
 CROSS = "✘"
 TICK = "✓"
@@ -37,8 +38,11 @@ class ProgressActionDisplayer(object):
     def __init__(self):
         self.actions = {}
         self.lock = Lock()
+        atexit.register(self.exit)
         Thread(target = self._action_display_target, daemon = True).start()
         
+    def exit(self):
+        success('Program exited')
 
     def start_action(self, action):
         thread_name = threading.current_thread().name
@@ -146,14 +150,16 @@ sys.stderr = FakeStdObject(originalStdErr, error)
 
 # The console wrapper, show the current action while
 # the function is executed
-def console_action(action, print_exception = False):
+def console_action(action, print_exception = False, log_entry = True):
     def console_action_decorator(func):
         def wrapper(*args, **kwargs):
             try:
-                success(f'Started {action}') #  TODO depth (by thread)
+                if log_entry:
+                    success(f'Started {action}') #  TODO depth (by thread)
                 displayer.start_action(action)
                 result = func(*args, **kwargs)
-                success(f'Completed {action}')
+                if log_entry:
+                    success(f'Completed {action}')
             except BaseException as ex:
                 displayer.lock.acquire()
                 error(f'Failed {action}: {ex.__class__.__name__}')
