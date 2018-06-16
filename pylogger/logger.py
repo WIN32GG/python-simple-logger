@@ -97,7 +97,7 @@ class ProgressActionDisplayer(object):
             if not action:
                 continue
 
-            print(f'\r  {Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}...{Fore.RESET}', file = originalStdOut, end='') # TODO depth
+            print(f'\r  {Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}{Fore.RESET}', file = originalStdOut, end='') # TODO depth
             # {print_at(int(rows), 5)}
 
 class FakeStdObject(object):
@@ -155,14 +155,14 @@ def console_action(action, print_exception = False, log_entry = True):
         def wrapper(*args, **kwargs):
             try:
                 if log_entry:
-                    success(f'Started {action}') #  TODO depth (by thread)
+                    success(f'Started: {action}') #  TODO depth (by thread)
                 displayer.start_action(action)
                 result = func(*args, **kwargs)
                 if log_entry:
-                    success(f'Completed {action}')
+                    success(f'Completed: {action}')
             except BaseException as ex:
                 displayer.lock.acquire()
-                error(f'Failed {action}: {ex.__class__.__name__}')
+                error(f'Failed: {action}: {ex.__class__.__name__}')
                 if print_exception:
                     error("TODO: print stack") # TODO
                 displayer.lock.release()
