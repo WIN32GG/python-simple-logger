@@ -156,6 +156,18 @@ def debug(msg, file = originalStdOut, end = '\n'):
 sys.stdout = FakeStdObject(originalStdOut, fine)
 sys.stderr = FakeStdObject(originalStdErr, error)
 
+def no_spinner(func):
+    def wrapper(*args, **kwargs):
+        try:
+            displayer.start_action(None)
+            return func(*args, **kwargs) 
+        except BaseException as e:
+            raise e
+        finally:
+            displayer.finish_action()
+    return wrapper
+
+
 # The console wrapper, show the current action while
 # the function is executed
 def console_action(action = "", log_entry = False, print_exception = False):
