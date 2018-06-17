@@ -75,12 +75,20 @@ class ProgressActionDisplayer(object):
             nonlocal thread_index
             self.lock.acquire()
             keys = self.actions.keys()
+           
             if len(keys) == 0:
                 return None
+
             if thread_index >= len(keys):
                 thread_index = 0
+
             thread_name = list(keys)[thread_index]
-            action =  self.actions[thread_name][len(self.actions[thread_name]) -1]
+            action_length = len(self.actions[thread_name])
+
+            if action_length == 0:
+                return None
+
+            action = self.actions[thread_name][action_length -1] # print stack top
             self.lock.release()
             return action
 
@@ -106,6 +114,11 @@ class FakeStdObject(object):
         self.print_with = print_with
 
     def write(self, obj):
+        if not obj.endswith('\n'):
+            self.std_object.write('\r                                                                     ')
+            self.std_object.write('\r'+obj)
+            self.flush() 
+            return
         self.print_with(obj, self.std_object, '')   
 
     def flush(self):
@@ -118,31 +131,26 @@ def setVerbose(verbose):
     global VERBOSE
     VERBOSE = verbose
 
-def fix_msg(msg):
-    if not msg.endswith('\n'):
-        msg += '\n'
-    return msg
+# def fix_msg(msg):
+#     if not msg.endswith('\n'):
+#         msg += '\n'
+#     return msg
 
 def fine(msg, file = originalStdOut, end = '\n'):
-    #msg = fix_msg(msg)
     print(f'{FINE}{DATE()}{msg}', file = file, end = end)
 
 def success(msg, file = originalStdOut, end = '\n'):
-    #msg = fix_msg(msg)
     print(f'{INFO}{DATE()}{msg}', file = file, end = end)
 
 def warning(msg, file = originalStdOut, end = '\n'):
-    #msg = fix_msg(msg)
     print(f'{WARN}{DATE()}{msg}', file = file, end = end)
 
 def error(msg, file = originalStdErr, end = '\n'):
-    #msg = fix_msg(msg)
     print(f'{ERR}{DATE()}{msg}', file = file, end = end)
 
 def debug(msg, file = originalStdOut, end = '\n'):
     global VERBOSE
     if VERBOSE:
-        #msg = fix_msg(msg)
         print(f'{DEBUG}{DATE()}{msg}', file = file, end = end)
 
 sys.stdout = FakeStdObject(originalStdOut, fine)
@@ -150,7 +158,7 @@ sys.stderr = FakeStdObject(originalStdErr, error)
 
 # The console wrapper, show the current action while
 # the function is executed
-def console_action(action, print_exception = False, log_entry = True):
+def console_action(action = "", log_entry = False, print_exception = False):
     def console_action_decorator(func):
         def wrapper(*args, **kwargs):
             try:
@@ -161,14 +169,13 @@ def console_action(action, print_exception = False, log_entry = True):
                 if log_entry:
                     success(f'Completed: {action}')
             except BaseException as ex:
-                displayer.lock.acquire()
+                #displayer.lock.acquire()
                 error(f'Failed: {action}: {ex.__class__.__name__}')
                 if print_exception:
                     error("TODO: print stack") # TODO
-                displayer.lock.release()
+                #displayer.lock.release()
                 raise ex
             finally:
-                
                 displayer.finish_action()
 
             return result
