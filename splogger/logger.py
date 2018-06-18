@@ -6,10 +6,13 @@ from datetime import datetime
 import threading
 from threading import Lock
 from threading import Thread
+from multiprocessing import Value
 import itertools
 from time import sleep
 from time import time
 import atexit
+
+import codecs
 
 CROSS = "✘"
 TICK = "✓"
@@ -26,10 +29,10 @@ WARN  = f'\r{Fore.YELLOW}[!] {Fore.RESET}'
 ERR   = f'\r{Fore.RED}[{CROSS}] {Fore.RESET}'
 DEBUG = f'\r{Fore.LIGHTBLUE_EX}[i] {Fore.RESET}'
 FINE  = f'\r    '
-DATE  = lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S ")
+DATE  = lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S : ")
 
 VERBOSE = False
-CURRENT_SPINNER = 1
+CURRENT_SPINNER = 4
 
 originalStdOut = sys.stdout
 originalStdErr = sys.stderr
@@ -38,11 +41,14 @@ class ProgressActionDisplayer(object):
     def __init__(self):
         self.actions = {}
         self.lock = Lock()
+        self.running = Value('i', 0)
         atexit.register(self.exit)
         Thread(target = self._action_display_target, daemon = True).start()
         
     def exit(self):
-        success('Program exited')
+        self.lock.acquire()
+        if self.running.value:
+            originalStdOut.write('\r                                         ')
 
     def start_action(self, action):
         thread_name = threading.current_thread().name
@@ -103,7 +109,9 @@ class ProgressActionDisplayer(object):
 
             action = get_action()
             if not action:
+                self.running.value = 0
                 continue
+            self.running.value = 1
 
             print(f'\r  {Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}{Fore.RESET}', file = originalStdOut, end='') # TODO depth
             # {print_at(int(rows), 5)}
@@ -114,27 +122,22 @@ class FakeStdObject(object):
         self.print_with = print_with
 
     def write(self, obj):
-        if not obj.endswith('\n'):
-            self.std_object.write('\r                                                                     ')
-            self.std_object.write('\r'+obj)
-            self.flush() 
+        if obj == '\n':
             return
-        self.print_with(obj, self.std_object, '')   
+        
+        if not obj.endswith('\n'):
+            obj += '\n'
 
+        self.print_with(obj, self.std_object, '')   
+        self.flush()
     def flush(self):
         self.std_object.flush()
 
-
 displayer = ProgressActionDisplayer()
 
-def setVerbose(verbose):
+def set_verbose(verbose):
     global VERBOSE
     VERBOSE = verbose
-
-# def fix_msg(msg):
-#     if not msg.endswith('\n'):
-#         msg += '\n'
-#     return msg
 
 def fine(msg, file = originalStdOut, end = '\n'):
     print(f'{FINE}{DATE()}{msg}', file = file, end = end)
@@ -153,8 +156,20 @@ def debug(msg, file = originalStdOut, end = '\n'):
     if VERBOSE:
         print(f'{DEBUG}{DATE()}{msg}', file = file, end = end)
 
-sys.stdout = FakeStdObject(originalStdOut, fine)
-sys.stderr = FakeStdObject(originalStdErr, error)
+std_captured = False
+def capture_std_outputs(value = True):
+    global std_captured
+    if std_captured and not value:
+        sys.stdout = originalStdOut
+        sys.stderr = originalStdErr
+        std_captured = False
+        return
+    
+    if not std_captured and value:
+        sys.stdout = FakeStdObject(originalStdOut, fine)
+        sys.stderr = FakeStdObject(originalStdErr, error)
+        std_captured = True
+        return
 
 def no_spinner(func):
     def wrapper(*args, **kwargs):
@@ -167,10 +182,23 @@ def no_spinner(func):
             displayer.finish_action()
     return wrapper
 
+def unformat(func):
+    def wrapper(*args, **kwargs):
+        v = std_captured
+        try: 
+            if std_captured:
+                capture_std_outputs(False)
+            return func(*args, **kwargs)
+        except BaseException as ex:
+            raise ex
+        finally:
+            capture_std_outputs(v)
+    return wrapper
+
 
 # The console wrapper, show the current action while
 # the function is executed
-def console_action(action = "", log_entry = False, print_exception = False):
+def spinner(action = "", log_entry = False, print_exception = False):
     def console_action_decorator(func):
         def wrapper(*args, **kwargs):
             try:
@@ -193,3 +221,11 @@ def console_action(action = "", log_entry = False, print_exception = False):
             return result
         return wrapper
     return console_action_decorator  
+
+def use_spinner(index):
+    global SPINNERS
+    global CURRENT_SPINNER
+    assert index > 0 and index < len(SPINNERS)
+    CURRENT_SPINNER = index
+
+__all__ = ["use_spinner", "spinner", "no_spinner", "capture_std_outputs", "success", "error", "debug", "warning", "set_verbose", "fine", "unformat"]

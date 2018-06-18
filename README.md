@@ -8,12 +8,12 @@ A simple tool to have nicer console output
 
 ## Usage
 
-To mark a function as 'output worthy' use the @console_action decorator
+To mark a function as 'output worthy' use the @spinner decorator
 ```python
     import logger
     from time import sleep
 
-    @logger.console_action("Printing OK")
+    @logger.spinner("Printing OK")
     def wait_and_print_ok():
         sleep(4)
         logger.success("OK")
