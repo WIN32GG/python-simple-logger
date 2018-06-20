@@ -46,7 +46,7 @@ class ProgressActionDisplayer(object):
         Thread(target = self._action_display_target, daemon = True).start()
         
     def exit(self):
-        self.lock.acquire()
+        # self.lock.acquire()
         if self.running.value:
             originalStdOut.write('\r                                         ')
 
@@ -184,9 +184,10 @@ def no_spinner(func):
 
 def unformat(func):
     def wrapper(*args, **kwargs):
+        global std_captured
         v = std_captured
         try: 
-            if std_captured:
+            if v:
                 capture_std_outputs(False)
             return func(*args, **kwargs)
         except BaseException as ex:
@@ -198,7 +199,7 @@ def unformat(func):
 
 # The console wrapper, show the current action while
 # the function is executed
-def spinner(action = "", log_entry = False, print_exception = False):
+def element(action = "", log_entry = False, print_exception = False):
     def console_action_decorator(func):
         def wrapper(*args, **kwargs):
             try:
@@ -222,10 +223,23 @@ def spinner(action = "", log_entry = False, print_exception = False):
         return wrapper
     return console_action_decorator  
 
+def clear(func):
+    return no_spinner(unformat(func))
+
+def fancy_output(action = "", log_entry = False, print_exception = False):
+    def decorator(func):
+        return element(action, log_entry, print_exception)(clear(func))
+    return decorator
+    
+def auto(log_entry = True, print_exception = True):
+    def decorator(func):
+        return element(func.__name__, log_entry, print_exception)(func)
+    return decorator
+
 def use_spinner(index):
     global SPINNERS
     global CURRENT_SPINNER
     assert index > 0 and index < len(SPINNERS)
     CURRENT_SPINNER = index
 
-__all__ = ["use_spinner", "spinner", "no_spinner", "capture_std_outputs", "success", "error", "debug", "warning", "set_verbose", "fine", "unformat"]
+__all__ = ["auto", "clear", "use_spinner", "element", "no_spinner", "capture_std_outputs", "success", "error", "debug", "warning", "set_verbose", "fine", "unformat"]
