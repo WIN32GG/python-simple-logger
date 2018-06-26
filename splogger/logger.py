@@ -11,6 +11,7 @@ import itertools
 from time import sleep
 from time import time
 import atexit
+from wrapt import decorator
 
 import codecs
 
@@ -32,7 +33,7 @@ FINE  = f'\r    '
 DATE  = lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S : ")
 
 VERBOSE = False
-CURRENT_SPINNER = 4
+CURRENT_SPINNER = 1
 
 originalStdOut = sys.stdout
 originalStdErr = sys.stderr
@@ -48,7 +49,7 @@ class ProgressActionDisplayer(object):
     def exit(self):
         # self.lock.acquire()
         if self.running.value:
-            originalStdOut.write('\r                                         ')
+            originalStdOut.write('\r                                         \n')
 
     def start_action(self, action):
         thread_name = threading.current_thread().name
@@ -80,22 +81,25 @@ class ProgressActionDisplayer(object):
         def get_action():
             nonlocal thread_index
             self.lock.acquire()
-            keys = self.actions.keys()
-           
-            if len(keys) == 0:
-                return None
+            try:
+                keys = self.actions.keys()
+            
+                if len(keys) == 0:
+                    return None
 
-            if thread_index >= len(keys):
-                thread_index = 0
+                if thread_index >= len(keys):
+                    thread_index = 0
 
-            thread_name = list(keys)[thread_index]
-            action_length = len(self.actions[thread_name])
+                thread_name = list(keys)[thread_index]
+                action_length = len(self.actions[thread_name])
 
-            if action_length == 0:
-                return None
+                if action_length == 0:
+                    return None
 
-            action = self.actions[thread_name][action_length -1] # print stack top
-            self.lock.release()
+                action = self.actions[thread_name][action_length -1] # print stack top
+            finally:
+                self.lock.release()
+
             return action
 
         spinner = make_spinner()
@@ -113,7 +117,7 @@ class ProgressActionDisplayer(object):
                 continue
             self.running.value = 1
 
-            print(f'\r  {Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}{Fore.RESET}', file = originalStdOut, end='') # TODO depth
+            print(f'\r  {Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}{Fore.RESET}', file = originalStdOut, end=' ') # TODO depth
             # {print_at(int(rows), 5)}
 
 class FakeStdObject(object):
@@ -171,8 +175,11 @@ def capture_std_outputs(value = True):
         std_captured = True
         return
 
-def no_spinner(func):
-    def wrapper(*args, **kwargs):
+# decorators
+
+def no_spinner():
+    @decorator
+    def wrapper(func, instance, args, kwargs): # FIXME change to ()
         try:
             displayer.start_action(None)
             return func(*args, **kwargs) 
@@ -182,8 +189,9 @@ def no_spinner(func):
             displayer.finish_action()
     return wrapper
 
-def unformat(func):
-    def wrapper(*args, **kwargs):
+def unformat():
+    @decorator
+    def wrapper(func, instance, args, kwargs):
         global std_captured
         v = std_captured
         try: 
@@ -200,41 +208,51 @@ def unformat(func):
 # The console wrapper, show the current action while
 # the function is executed
 def element(action = "", log_entry = False, print_exception = False):
-    def console_action_decorator(func):
-        def wrapper(*args, **kwargs):
-            try:
-                if log_entry:
-                    success(f'Started: {action}') #  TODO depth (by thread)
-                displayer.start_action(action)
-                result = func(*args, **kwargs)
-                if log_entry:
-                    success(f'Completed: {action}')
-            except BaseException as ex:
-                #displayer.lock.acquire()
-                error(f'Failed: {action}: {ex.__class__.__name__}')
-                if print_exception:
-                    error("TODO: print stack") # TODO
-                #displayer.lock.release()
-                raise ex
-            finally:
-                displayer.finish_action()
+    @decorator
+    def wrapper(func, instance, args, kwargs):
+        try:
+            if log_entry:
+                success(f'Starting: {action}') #  TODO depth (by thread)
+            displayer.start_action(action)
+            result = func(*args, **kwargs)
+            if log_entry:
+                success(f'Completed: {action}')
+        except BaseException as ex:
+            #displayer.lock.acquire()
+            error(f'Failed: {action}: {ex.__class__.__name__}')
+            # if print_exception:
+            #     error("TODO : print stack") # TODO
+            #displayer.lock.release()
+            raise ex
+        finally:
+            displayer.finish_action()
 
-            return result
-        return wrapper
-    return console_action_decorator  
+        return result
+    return wrapper
 
-def clear(func):
-    return no_spinner(unformat(func))
+def clear():
+    @decorator
+    @unformat()
+    @no_spinner()
+    def wrapper(func, instance, args, kwargs):
+        return func(*args, **kwargs)
+    return wrapper
 
 def fancy_output(action = "", log_entry = False, print_exception = False):
-    def decorator(func):
-        return element(action, log_entry, print_exception)(clear(func))
-    return decorator
+    @decorator
+    @element(action, log_entry, print_exception)
+    def wrapper(func, instance, args, kwargs):
+        return func(*args, **kwargs)
+    return wrapper
     
 def auto(log_entry = True, print_exception = True):
-    def decorator(func):
-        return element(func.__name__, log_entry, print_exception)(func)
-    return decorator
+    @decorator
+    def wrapper(func, instance, args, kwargs):
+        @element(func.__name__, log_entry, print_exception)
+        def wrapper2(func, instance, args, kwargs):
+            return func(*args, **kwargs)
+        return wrapper2(func, instance, args, kwargs)
+    return wrapper
 
 def use_spinner(index):
     global SPINNERS
