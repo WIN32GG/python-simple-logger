@@ -1,26 +1,43 @@
 import logger
 from time import sleep
+from subprocess import check_call
 
-@logger.spinner("Printing OK")
+
+@logger.element("Printing OK")
 def wait_and_print_ok():
     logger.success("OK")
     print('ok')
-    print('Normal log')
-    sleep(4)
-    use_tqdm()
-    print('All is ok')
-    sleep(4)
+    print(test_input())
 
-@logger.unformat
-@logger.no_spinner
-def use_tqdm():
-    print("Fancy console\routput")
+
+@logger.clear
+def test_input():
+    input(">")
+    yes()
+    input("b")
+    return 'y'
+
+
+@logger.auto()
+def yes():
     sleep(2)
 
-@logger.spinner("e")
+
+@logger.auto()
+def check_script():
+    sleep(2)
+
+
+@logger.fancy_output("Tensorflow upgrade", log_entry=True)
+def use_tqdm():
+    check_call(["python", "-m", "pip", "install",
+                "tensorflow", "--upgrade", "--no-cache"])
+
+
+@logger.element("e")
 def e():
     sleep(1)
- 
+
+
 logger.capture_std_outputs()
 wait_and_print_ok()
-
