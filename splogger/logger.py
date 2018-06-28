@@ -56,7 +56,7 @@ class ProgressActionDisplayer(object):
     def start_action(self, action):
         thread_name = threading.current_thread().name
         self.lock.acquire()
-        if not thread_name in self.actions:
+        if thread_name not in self.actions:
             self.actions[thread_name] = []
         self.actions[thread_name].append(action)
         self.lock.release()
