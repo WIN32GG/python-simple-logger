@@ -1,2 +1,1 @@
-from . import logger
-__all__ = logger.__all__
+from .logger import *

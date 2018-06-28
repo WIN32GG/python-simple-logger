@@ -153,6 +153,9 @@ def set_verbose(verbose):
     global VERBOSE
     VERBOSE = verbose
 
+def get_verbose():
+    global VERBOSE
+    return VERBOSE
 
 def fine(msg, file=originalStdOut, end='\n'):
     print(f'{FINE}{DATE()}{msg}', file=file, end=end)
@@ -297,5 +300,6 @@ __all__ = [
     "debug",
     "warning",
     "set_verbose",
+    "get_verbose",
     "fine",
     "unformat"]
