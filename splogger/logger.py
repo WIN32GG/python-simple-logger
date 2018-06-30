@@ -50,8 +50,7 @@ class ProgressActionDisplayer(object):
     def exit(self):
         # self.lock.acquire()
         if self.running.value:
-            originalStdOut.write(
-                '\r                                         \n')
+            originalStdOut.write('\r\033[K\n')
 
     def start_action(self, action):
         thread_name = threading.current_thread().name
@@ -120,7 +119,7 @@ class ProgressActionDisplayer(object):
             self.running.value = 1
 
             print(
-                f'\r  {Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}{Fore.RESET}',
+                f'\r\033[K{Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}{Fore.RESET}',
                 file=originalStdOut,
                 end=' ')  # TODO depth
             # {print_at(int(rows), 5)}
