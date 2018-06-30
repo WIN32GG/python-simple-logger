@@ -106,7 +106,7 @@ class ProgressActionDisplayer(object):
         spinner = make_spinner()
         while True:
             sleep(0.1)
-            #rows, _ = os.popen('stty size', 'r').read().split()
+            # rows, _ = os.popen('stty size', 'r').read().split()
 
             if last_thread_index_change + thread_switch_interval > time():
                 thread_index += 1
