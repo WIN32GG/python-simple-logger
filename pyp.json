@@ -24,8 +24,9 @@
         "release": {
             "commit_template": "Inscreased version to %s",
             "tag_template": "%s",
-            "package_signing_key": "",
-            "git_signing_key": ""
+            "package_signing_key": "649472416EF7C17160678B3B0E6469000F5EF8DB",
+            "git_signing_key": "649472416EF7C17160678B3B0E6469000F5EF8DB",
+            "docker_tags": "latest,%s"
         }
     },
     "project_requirements": {
@@ -33,5 +34,10 @@
         "python_packages": [
             "colorama"
         ]
+    },
+    "scripts": {
+        "pre-test": "",
+        "test": "pypi",
+        "post-test": ""
     }
 }

@@ -44,6 +44,7 @@ class ProgressActionDisplayer(object):
         self.actions = {}
         self.lock = Lock()
         self.running = Value('i', 0)
+        self.comp_info = ''
         atexit.register(self.exit)
         Thread(target=self._action_display_target, daemon=True).start()
 
@@ -58,13 +59,28 @@ class ProgressActionDisplayer(object):
         if thread_name not in self.actions:
             self.actions[thread_name] = []
         self.actions[thread_name].append(action)
+        self.comp_info = ''
         self.lock.release()
 
     def finish_action(self):
         thread_name = threading.current_thread().name
         self.lock.acquire()
         self.actions[thread_name].pop()
+        self.comp_info = ''
         self.lock.release()
+    
+    # Change the current displayed text near spinner to include additional info
+    def set_additional_info(self, info):
+        self.lock.acquire()
+        try:
+            if info is None:
+                self.comp_info = ''
+            if type(info) != str:
+                return
+            self.comp_info = '('+info+')'
+        finally:
+            self.lock.release()
+
 
     def _action_display_target(self):
         thread_index = 0
@@ -119,7 +135,7 @@ class ProgressActionDisplayer(object):
             self.running.value = 1
 
             print(
-                f'\r\033[K{Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action}{Fore.RESET}',
+                f'\r\033[K{Fore.CYAN}{next(spinner)}{Fore.MAGENTA} {action} {self.comp_info}{Fore.RESET}',
                 file=originalStdOut,
                 end=' ')  # TODO depth
             # {print_at(int(rows), 5)}
@@ -183,6 +199,7 @@ std_captured = False
 
 
 def capture_std_outputs(value=True):
+    debug('Switching stdout/err capture to: '+str(value))
     global std_captured
     if std_captured and not value:
         sys.stdout = originalStdOut
@@ -253,6 +270,7 @@ def element(action="", log_entry=False, print_exception=False):
         return result
     return wrapper
 
+set_additional_info = displayer.set_additional_info
 
 def clear():
     @decorator
@@ -302,4 +320,5 @@ __all__ = [
     "get_verbose",
     "set_verbose",
     "fine",
-    "unformat"]
+    "unformat",
+    "set_additional_info"]
