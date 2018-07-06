@@ -5,7 +5,9 @@ import os
 def poc():
     for d, _,f in os.walk('/proc'):
         for i in f:
-            log.success(i)
             log.set_additional_info(i)
 
+fh = open('log.txt', 'w+')
+log.set_log_file(fh)
 poc()
+fh.close()

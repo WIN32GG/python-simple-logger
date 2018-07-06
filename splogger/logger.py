@@ -35,6 +35,8 @@ def DATE(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S : ")
 VERBOSE = False
 CURRENT_SPINNER = 1
 
+log_fd = None
+
 originalStdOut = sys.stdout
 originalStdErr = sys.stderr
 
@@ -159,6 +161,32 @@ class FakeStdObject(object):
     def flush(self):
         self.std_object.flush()
 
+class LogStdObject(FakeStdObject):
+    def __init__(self, originalStd):
+        self.std = originalStd
+
+    def write(self, obj):
+        global log_fd
+
+        if obj == '\n':
+            return
+
+        if not obj.endswith('\n'):
+            obj += '\n'
+        
+        self.std.write(obj)
+        if log_fd != None:
+            log_fd.write(obj)
+        
+    def flush(self):
+        global log_fd
+
+        if log_fd != None:
+            log_fd.flush()
+        self.std.flush()
+        
+log_stdout = LogStdObject(originalStdOut)
+log_stderr = LogStdObject(originalStdErr)
 
 displayer = ProgressActionDisplayer()
 
@@ -173,23 +201,23 @@ def get_verbose():
     return VERBOSE
 
 
-def fine(msg, file=originalStdOut, end='\n'):
+def fine(msg, file=log_stdout, end='\n'):
     print(f'{FINE}{DATE()}{msg}', file=file, end=end)
 
 
-def success(msg, file=originalStdOut, end='\n'):
+def success(msg, file=log_stdout, end='\n'):
     print(f'{INFO}{DATE()}{msg}', file=file, end=end)
 
 
-def warning(msg, file=originalStdOut, end='\n'):
+def warning(msg, file=log_stdout, end='\n'):
     print(f'{WARN}{DATE()}{msg}', file=file, end=end)
 
 
-def error(msg, file=originalStdErr, end='\n'):
+def error(msg, file=log_stderr, end='\n'):
     print(f'{ERR}{DATE()}{msg}', file=file, end=end)
 
 
-def debug(msg, file=originalStdOut, end='\n'):
+def debug(msg, file=log_stdout, end='\n'):
     global VERBOSE
     if VERBOSE:
         print(f'{DEBUG}{DATE()}{msg}', file=file, end=end)
@@ -305,6 +333,13 @@ def use_spinner(index):
     assert index > 0 and index < len(SPINNERS)
     CURRENT_SPINNER = index
 
+def set_log_file(file):
+    global log_fd
+    if log_fd != None:
+        log_fd.close()
+    
+    log_fd = file
+
 
 __all__ = [
     "auto",
@@ -321,4 +356,5 @@ __all__ = [
     "set_verbose",
     "fine",
     "unformat",
-    "set_additional_info"]
+    "set_additional_info",
+    "set_log_file"]
