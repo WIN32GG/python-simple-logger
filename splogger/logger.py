@@ -29,7 +29,7 @@ DEBUG = f'\r{Fore.LIGHTBLUE_EX}[i] {Fore.RESET}'
 FINE = f'\r    '
 
 
-def DATE(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S : ")
+def DATE(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 VERBOSE = False
@@ -202,25 +202,25 @@ def get_verbose():
 
 
 def fine(msg, file=log_stdout, end='\n'):
-    print(f'{FINE}{DATE()}{msg}', file=file, end=end)
+    print(f'{FINE}{DATE()} : {msg}', file=file, end=end)
 
 
 def success(msg, file=log_stdout, end='\n'):
-    print(f'{INFO}{DATE()}{msg}', file=file, end=end)
+    print(f'{INFO}{DATE()} : {msg}', file=file, end=end)
 
 
 def warning(msg, file=log_stdout, end='\n'):
-    print(f'{WARN}{DATE()}{msg}', file=file, end=end)
+    print(f'{WARN}{DATE()} : {msg}', file=file, end=end)
 
 
 def error(msg, file=log_stderr, end='\n'):
-    print(f'{ERR}{DATE()}{msg}', file=file, end=end)
+    print(f'{ERR}{DATE()} : {msg}', file=file, end=end)
 
 
 def debug(msg, file=log_stdout, end='\n'):
     global VERBOSE
     if VERBOSE:
-        print(f'{DEBUG}{DATE()}{msg}', file=file, end=end)
+        print(f'{DEBUG}{DATE()} : {msg}', file=file, end=end)
 
 
 std_captured = False
