@@ -344,6 +344,12 @@ def set_log_file(file):
     global log_fd
     if log_fd != None:
         log_fd.close()
+        log_fd = None
+    
+    if file == None:
+        return
+    if type(file) == str:
+        file = open(file, 'a')
     
     log_fd = file
 

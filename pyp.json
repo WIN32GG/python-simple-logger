@@ -3,7 +3,7 @@
         "name": "splogger",
         "description": "Simple Python Logger",
         "license": "MIT",
-        "url": "https://github.com/WIN32GG/splogger"
+        "url": "https://github.com/WIN32GG/python-simple-logger"
     },
     "project_authors": [
         {
@@ -19,7 +19,7 @@
         "exclude_packages": [
             "test"
         ],
-        "version": "0.0.10",
+        "version": "0.0.11",
         "ignored_errors": "E121,E123,E126,E226,E24,E704,W503,W504,E501",
         "release": {
             "commit_template": "Inscreased version to %s",
