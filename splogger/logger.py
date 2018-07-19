@@ -22,11 +22,14 @@ SPINNERS = [
     ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
 ]
 
-INFO = f'\r{Fore.LIGHTGREEN_EX}[{TICK}] {Fore.RESET}'
-WARN = f'\r{Fore.YELLOW}[!] {Fore.RESET}'
-ERR = f'\r{Fore.RED}[{CROSS}] {Fore.RESET}'
-DEBUG = f'\r{Fore.LIGHTBLUE_EX}[i] {Fore.RESET}'
-FINE = f'\r    '
+CLEAR_LINE = '\033[K'
+CR_CL      = '\r'+CLEAR_LINE
+
+INFO  = f'{CR_CL}{Fore.LIGHTGREEN_EX}[{TICK}] {Fore.RESET}'
+WARN  = f'{CR_CL}{Fore.YELLOW}[!] {Fore.RESET}'
+ERR   = f'{CR_CL}{Fore.RED}[{CROSS}] {Fore.RESET}'
+DEBUG = f'{CR_CL}{Fore.LIGHTBLUE_EX}[i] {Fore.RESET}'
+FINE  = f'{CR_CL}    '
 
 
 def DATE(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
