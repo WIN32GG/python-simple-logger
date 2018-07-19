@@ -88,12 +88,13 @@ class ProgressActionDisplayer(object):
         thread_index = 0
         last_thread_index_change = 0
         thread_switch_interval = 1  # in sec
-        spinner_chars = SPINNERS[CURRENT_SPINNER]
+        
 
         # def print_at(row, column):
         #     return f'\033[{row};{column}H'
 
         def make_spinner():
+            spinner_chars = SPINNERS[CURRENT_SPINNER]
             return itertools.cycle(spinner_chars)
 
         def get_action():
@@ -134,6 +135,9 @@ class ProgressActionDisplayer(object):
             if not action:
                 self.running.value = 0
                 continue
+            if self.running.value == 0:
+                spinner = make_spinner()
+
             self.running.value = 1
 
             print(
@@ -330,7 +334,7 @@ def auto(log_entry=True, print_exception=True):
 def use_spinner(index):
     global SPINNERS
     global CURRENT_SPINNER
-    assert index > 0 and index < len(SPINNERS)
+    assert index >= 0 and index < len(SPINNERS)
     CURRENT_SPINNER = index
 
 def set_log_file(file):
