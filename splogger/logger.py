@@ -1,6 +1,6 @@
 from __future__ import print_function
 import sys
-from colorama import Fore
+from colorama import Fore, Style
 from datetime import datetime
 import threading
 from threading import Lock
@@ -29,14 +29,14 @@ INFO  = f'{CR_CL}{Fore.LIGHTGREEN_EX}[{TICK}] {Fore.RESET}'
 WARN  = f'{CR_CL}{Fore.YELLOW}[!] {Fore.RESET}'
 ERR   = f'{CR_CL}{Fore.RED}[{CROSS}] {Fore.RESET}'
 DEBUG = f'{CR_CL}{Fore.LIGHTBLUE_EX}[i] {Fore.RESET}'
-FINE  = f'{CR_CL}    '
+FINE  = f'{CR_CL}    {Fore.RESET}'
 
 
 def DATE(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 VERBOSE = False
-CURRENT_SPINNER = 1
+CURRENT_SPINNER = 3
 
 log_fd = None
 
@@ -208,26 +208,26 @@ def get_verbose():
     return VERBOSE
 
 
-def fine(msg, file=log_stdout, end='\n'):
-    print(f'{FINE}{DATE()} : {msg}', file=file, end=end)
+def fine(msg, file=log_stdout, strong=False, end='\n'):
+    print(f'{FINE}{DATE()} : {Style.BRIGHT + Fore.WHITE if strong else ""}{msg}{Fore.RESET + Style.NORMAL}', file=file, end=end)
 
 
-def success(msg, file=log_stdout, end='\n'):
-    print(f'{INFO}{DATE()} : {msg}', file=file, end=end)
+def success(msg, file=log_stdout, strong=False, end='\n'):
+    print(f'{INFO}{DATE()} : {Style.BRIGHT + Fore.LIGHTGREEN_EX if strong else ""}{msg}{Fore.RESET + Style.NORMAL}', file=file, end=end)
 
 
-def warning(msg, file=log_stdout, end='\n'):
-    print(f'{WARN}{DATE()} : {msg}', file=file, end=end)
+def warning(msg, file=log_stdout, strong=False, end='\n'):
+    print(f'{WARN}{DATE()} : {Style.BRIGHT + Fore.YELLOW if strong else ""}{msg}{Fore.RESET + Style.NORMAL}', file=file, end=end)
 
 
-def error(msg, file=log_stderr, end='\n'):
-    print(f'{ERR}{DATE()} : {msg}', file=file, end=end)
+def error(msg, file=log_stderr, strong=False, end='\n'):
+    print(f'{ERR}{DATE()} : {Style.BRIGHT + Fore.RED if strong else ""}{msg}{Fore.RESET + Style.NORMAL}', file=file, end=end)
 
 
-def debug(msg, file=log_stdout, end='\n'):
+def debug(msg, file=log_stdout, strong=False, end='\n'):
     global VERBOSE
     if VERBOSE:
-        print(f'{DEBUG}{DATE()} : {msg}', file=file, end=end)
+        print(f'{DEBUG}{DATE()} : {Style.BRIGHT + Fore.LIGHTBLUE_EX if strong else ""}{msg}{Fore.RESET + Style.NORMAL}', file=file, end=end)
 
 
 std_captured = False
