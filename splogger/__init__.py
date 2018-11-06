@@ -1,6 +1,6 @@
 from .logger import *
 
-__version__ = "0.0.11"
+__version__ = "0.0.12"
 
 __name__ = "splogger"
 __author__ = "win32gg"
