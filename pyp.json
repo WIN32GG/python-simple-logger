@@ -19,13 +19,13 @@
         "exclude_packages": [
             "test"
         ],
-        "version": "0.1.2",
+        "version": "0.1.3",
         "ignored_errors": "E121,E123,E126,E226,E24,E704,W503,W504,E501",
         "release": {
             "commit_template": "Inscreased version to %s",
             "tag_template": "%s",
-            "package_signing_key": "649472416EF7C17160678B3B0E6469000F5EF8DB",
-            "git_signing_key": "",
+            "package_signing_key": "46289AEB032090764C6608B3C61F5C293B461B0E",
+            "git_signing_key": "46289AEB032090764C6608B3C61F5C293B461B0E",
             "docker_tags": "latest,%s"
         }
     },
