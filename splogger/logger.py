@@ -73,7 +73,7 @@ class ProgressActionDisplayer(object):
         self.actions[thread_name].pop()
         self.comp_info = ''
         self.lock.release()
-    
+
     # Change the current displayed text near spinner to include additional info
     def set_additional_info(self, info):
         self.lock.acquire()
@@ -91,7 +91,7 @@ class ProgressActionDisplayer(object):
         thread_index = 0
         last_thread_index_change = 0
         thread_switch_interval = 1  # in sec
-        
+
 
         # def print_at(row, column):
         #     return f'\033[{row};{column}H'
@@ -180,18 +180,19 @@ class LogStdObject(FakeStdObject):
 
         if not obj.endswith('\n'):
             obj += '\n'
-        
+
         self.std.write(obj)
         if log_fd != None:
             log_fd.write(obj)
-        
+            log_fd.flush()
+
     def flush(self):
         global log_fd
 
         if log_fd != None:
             log_fd.flush()
         self.std.flush()
-        
+
 log_stdout = LogStdObject(originalStdOut)
 log_stderr = LogStdObject(originalStdErr)
 
@@ -345,12 +346,12 @@ def set_log_file(file):
     if log_fd != None:
         log_fd.close()
         log_fd = None
-    
+
     if file == None:
         return
     if type(file) == str:
-        file = open(file, 'a')
-    
+        file = open(file, 'w+')
+
     log_fd = file
 
 
